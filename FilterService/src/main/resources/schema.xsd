@@ -1,0 +1,79 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:tns="http://soa/lab/filter"
+           targetNamespace="http://soa/lab/filter"
+           elementFormDefault="qualified">
+
+    <xs:element name="filterOrgsByTurnoverRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="min-annual-turnover" type="xs:float"/>
+                <xs:element name="max-annual-turnover" type="xs:float"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="filterOrgsByTurnoverResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" maxOccurs="unbounded" name="orgs" nillable="true" type="tns:OrganizationDto"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+
+    <xs:element name="filterOrgsByEmployeesCountRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="min-employees-count" type="xs:int"/>
+                <xs:element name="max-employees-count" type="xs:int"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="filterOrgsByEmployeesCountResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" maxOccurs="unbounded" name="orgs" nillable="true" type="tns:OrganizationDto"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+
+    <xs:complexType name="LocationDto">
+        <xs:sequence>
+            <xs:element name="id" type="xs:long" minOccurs="0"/>
+            <xs:element name="x" type="xs:int"/>
+            <xs:element name="y" type="xs:float"/>
+            <xs:element name="name" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="OfficialAddressDto">
+        <xs:sequence>
+            <xs:element name="id" type="xs:long" minOccurs="0"/>
+            <xs:element name="zipCode" type="xs:string"/>
+            <xs:element name="town" type="tns:LocationDto"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="CoordinateDto">
+        <xs:sequence>
+            <xs:element name="id" type="xs:long" minOccurs="0"/>
+            <xs:element name="x" type="xs:float"/>
+            <xs:element name="y" type="xs:int"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="OrganizationDto">
+        <xs:sequence>
+            <xs:element name="id" type="xs:long" minOccurs="0"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="employeesCount" type="xs:int"/>
+            <xs:element name="coordinates" type="tns:CoordinateDto"/>
+            <xs:element name="creationDate" type="xs:string"/>
+            <xs:element name="annualTurnover" type="xs:float"/>
+            <xs:element name="type" type="xs:string"/>
+            <xs:element name="officialAddress" type="tns:OfficialAddressDto"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import soa.lab.entity.Organization;
 import soa.lab.exception.DataNotFoundException;
+import soa.lab.filter.OrganizationDto;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,28 +23,29 @@ public class FilterService {
     }
 
 
-    public List<Organization> filterOrgsByTurnover(Float min, Float max) {
-        Organization[] responseBody = getOrganizationsFromMainService();
+    public List<OrganizationDto> filterOrgsByTurnover(Float min, Float max) {
+        OrganizationDto[] responseBody = getOrganizationsFromMainService();
         log.info("Request from main service received with {} elements.\nFiltering by anal.", responseBody.length);
-        List<Organization> organizations = Arrays.stream(responseBody).filter(o -> o.getAnnualTurnover() >= min && o.getAnnualTurnover() <= max).collect(Collectors.toList());
+        log.info("min: {}, max: {}, first: {}", min, max, responseBody[0]);
+        List<OrganizationDto> organizations = Arrays.stream(responseBody).filter(o -> o.getAnnualTurnover() >= min && o.getAnnualTurnover() <= max).collect(Collectors.toList());
         if (organizations.isEmpty()) throw new DataNotFoundException("Organizations not found");
         return organizations;
     }
 
-    public List<Organization> filterOrgsByEmployeesCount(Float min, Float max) {
-        Organization[] responseBody = getOrganizationsFromMainService();
+    public List<OrganizationDto> filterOrgsByEmployeesCount(Integer min, Integer max) {
+        OrganizationDto[] responseBody = getOrganizationsFromMainService();
         log.info("Request from main service received with {} elements.\nFiltering by employee.", responseBody.length);
-        List<Organization> organizations = Arrays.stream(responseBody).filter(o -> o.getEmployeesCount() >= min && o.getEmployeesCount() <= max).collect(Collectors.toList());
+        List<OrganizationDto> organizations = Arrays.stream(responseBody).filter(o -> o.getEmployeesCount() >= min && o.getEmployeesCount() <= max).collect(Collectors.toList());
         if (organizations.isEmpty()) throw new DataNotFoundException("Organizations not found");
         return organizations;
     }
 
-    private Organization[] getOrganizationsFromMainService() {
-        Organization[] responseBody = localApiClient.get()
+    private OrganizationDto[] getOrganizationsFromMainService() {
+        OrganizationDto[] responseBody = localApiClient.get()
                 .uri("/orgs")
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .bodyToMono(Organization[].class)
+                .bodyToMono(OrganizationDto[].class)
                 .block();
         if (responseBody == null)
             throw new DataNotFoundException("Organizations not found");
