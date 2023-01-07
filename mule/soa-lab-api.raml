@@ -1,0 +1,50 @@
+#%RAML 1.0
+title: Soa lab
+baseUri: /orgdirectory
+
+mediaType: 
+  application/json
+
+annotationTypes:
+  monitoringInterval:
+    type: integer
+
+/filter/turnover/{min-annual-turnover}/{max-annual-turnover}:
+  get:
+    description: Anal filtering
+    responses:
+      200:
+        body:
+          type: object
+      400:
+        body:
+          type: object
+      500:
+        body:
+          type: object
+    securedBy: []
+  options:
+    displayName: Options
+    responses:
+      200: {}
+    securedBy: []
+  
+/filter/employees/{min-employees-count}/{max-employees-count}:
+  get:
+    description: Employee filtering
+    responses:
+      200:
+        body:
+          type: object
+      400:
+        body:
+          type: object
+      500:
+        body:
+          type: object
+    securedBy: []
+  options:
+    displayName: Options
+    responses:
+      200: {}
+    securedBy: []

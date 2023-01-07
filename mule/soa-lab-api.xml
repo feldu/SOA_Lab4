@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:ws="http://www.mulesoft.org/schema/mule/ws"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+      xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns="http://www.mulesoft.org/schema/mule/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/current/mule-ws.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+    <http:listener-config name="soa-lab-api-httpListenerConfig" host="0.0.0.0" port="31511" basePath="/orgdirectory"
+                          doc:name="HTTP Listener Configuration">
+    </http:listener-config>
+    <apikit:config name="soa-lab-api-config" raml="soa-lab-api.raml" consoleEnabled="false" doc:name="Router"/>
+    <ws:consumer-config name="Web_Service_Consumer" wsdlLocation="http://localhost:31512/ws/schema.wsdl?wsdl"
+                        service="SchemaPortService" port="SchemaPortSoap11" serviceAddress="http://localhost:31512/ws"
+                        doc:name="Web Service Consumer"/>
+    <flow name="soa-lab-api-main">
+        <http:listener config-ref="soa-lab-api-httpListenerConfig" path="/*" doc:name="HTTP">
+            <http:response-builder>
+                <http:header headerName="Access-Control-Allow-Origin" value="*"/>
+            </http:response-builder>
+        </http:listener>
+        <apikit:router config-ref="soa-lab-api-config" doc:name="APIkit Router"/>
+        <exception-strategy ref="soa-lab-api-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
+    </flow>
+    <flow name="soa-lab-api-console">
+        <http:listener config-ref="soa-lab-api-httpListenerConfig" path="/console/*" doc:name="HTTP"/>
+        <apikit:console config-ref="soa-lab-api-config" doc:name="APIkit Console"/>
+    </flow>
+    <flow name="options:/filter/employees/{min-employees-count}/{max-employees-count}:soa-lab-api-config">
+        <logger message="options: emp" level="INFO" doc:name="Logger"/>
+        <set-variable variableName="httpStatus" value="200" doc:name="Variable"/>
+
+    </flow>
+    <flow name="options:/filter/turnover/{min-annual-turnover}/{max-annual-turnover}:soa-lab-api-config">
+        <logger message="options: anal" level="INFO" doc:name="Logger"/>
+        <set-variable variableName="httpStatus" value="200" doc:name="Variable"/>
+
+    </flow>
+    <flow name="get:/filter/employees/{min-employees-count}/{max-employees-count}:soa-lab-api-config">
+        <logger message="getShitEm" level="INFO" doc:name="Logger"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+%namespace ns0 http://soa/lab/filter
+---
+{
+	ns0#filterOrgsByEmployeesCountRequest: {
+		ns0#min-employees-count: flowVars.min-employees-count as :number,
+		ns0#max-employees-count: flowVars.max-employees-count as :number
+	}
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <ws:consumer config-ref="Web_Service_Consumer" operation="filterOrgsByEmployeesCount"
+                     doc:name="Web Service Consumer"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+%namespace ns0 http://soa/lab/filter
+---
+payload.ns0#filterOrgsByEmployeesCountResponse.*ns0#orgs]]></dw:set-payload>
+        </dw:transform-message>
+
+    </flow>
+    <flow name="get:/filter/turnover/{min-annual-turnover}/{max-annual-turnover}:soa-lab-api-config">
+        <logger message="Get Shit Anal" level="INFO" doc:name="Logger"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+%namespace ns0 http://soa/lab/filter
+---
+{
+	ns0#filterOrgsByTurnoverRequest: {
+		ns0#min-annual-turnover: flowVars.min-annual-turnover as :number,
+		ns0#max-annual-turnover: flowVars.max-annual-turnover as :number
+	}
+}]]></dw:set-payload>
+            <dw:set-variable variableName="max-annual-turnover"><![CDATA[%dw 1.0
+%output application/java
+---
+{
+}]]></dw:set-variable>
+        </dw:transform-message>
+        <ws:consumer config-ref="Web_Service_Consumer" operation="filterOrgsByTurnover"
+                     doc:name="Web Service Consumer"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+%namespace ns0 http://soa/lab/filter
+---
+payload.ns0#filterOrgsByTurnoverResponse.*ns0#orgs]]></dw:set-payload>
+        </dw:transform-message>
+
+    </flow>
+    <apikit:mapping-exception-strategy name="soa-lab-api-apiKitGlobalExceptionMapping">
+        <apikit:mapping statusCode="404">
+            <apikit:exception value="org.mule.module.apikit.exception.NotFoundException"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Resource not found&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="405">
+            <apikit:exception value="org.mule.module.apikit.exception.MethodNotAllowedException"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Method not allowed&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="415">
+            <apikit:exception value="org.mule.module.apikit.exception.UnsupportedMediaTypeException"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Unsupported media type&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="406">
+            <apikit:exception value="org.mule.module.apikit.exception.NotAcceptableException"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Not acceptable&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="400">
+            <apikit:exception value="org.mule.module.apikit.exception.BadRequestException"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Bad request&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+    </apikit:mapping-exception-strategy>
+</mule>

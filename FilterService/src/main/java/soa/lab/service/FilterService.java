@@ -26,7 +26,6 @@ public class FilterService {
     public List<OrganizationDto> filterOrgsByTurnover(Float min, Float max) {
         OrganizationDto[] responseBody = getOrganizationsFromMainService();
         log.info("Request from main service received with {} elements.\nFiltering by anal.", responseBody.length);
-        log.info("min: {}, max: {}, first: {}", min, max, responseBody[0]);
         List<OrganizationDto> organizations = Arrays.stream(responseBody).filter(o -> o.getAnnualTurnover() >= min && o.getAnnualTurnover() <= max).collect(Collectors.toList());
         if (organizations.isEmpty()) throw new DataNotFoundException("Organizations not found");
         return organizations;
